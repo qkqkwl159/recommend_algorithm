@@ -17,7 +17,7 @@ python3 dummy_gen.py
 영상이 있는 디렉터리 경로로 설정하여 영상 카테고리 분류와 파일의 데이터 베이스를 저장 
 
 ```shell
-python3 make_video_db file_path/eg/
+python3 make_video_db.py ./output/meta/
 ```
 
 datainfo 디렉터리에 ```video_db.csv```가 생성된걸 확인후 아래 실행
