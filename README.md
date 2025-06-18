@@ -26,3 +26,10 @@ datainfo 디렉터리에 ```video_db.csv```가 생성된걸 확인후 아래 실
 python3 watch_emul.py
 ```
 
+# Analisys
+
+```recommend_by_watchlog.py``` 파일로 카테고리별 시청 비율 평균값 확인 가능 
+
+```shell
+python3 recommend_by_watchlog.py
+```
