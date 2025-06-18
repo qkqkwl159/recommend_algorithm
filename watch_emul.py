@@ -36,6 +36,13 @@ with open(video_db_path, newline='', encoding='utf-8') as f:
     reader = csv.DictReader(f)
     videos = list(reader)
 
+# category_id와 category명을 매핑하는 딕셔너리 생성
+category_map = {}
+with open('datainfo/category.csv', newline='', encoding='utf-8') as f:
+    reader = csv.DictReader(f)
+    for row in reader:
+        category_map[row['category_id']] = row['category']
+
 class WatchEmulator(QWidget):
     def __init__(self):
         super().__init__()
@@ -101,6 +108,7 @@ class WatchEmulator(QWidget):
                 break
 
     def get_ordered_videos(self):
+        print(f"get_ordered_videos: {self.user_id}")
         user_log_path = user_dir / f"{self.user_id}_watchlog.csv"
         # 기본: 랜덤 섞기
         import random
@@ -108,23 +116,43 @@ class WatchEmulator(QWidget):
         random.shuffle(vids)
         # 추천 카테고리 우선 정렬
         if user_log_path.exists():
+            print(f"user_log_path: {user_log_path}")
             try:
                 import subprocess
                 result = subprocess.run([
                     sys.executable, "recommend_by_watchlog.py", self.user_id
                 ], capture_output=True, text=True, check=True)
-                # best_category_id 추출
+                print("recommend_by_watchlog.py stdout:")
+                print(result.stdout)
+                # best_category_name 추출
                 for line in result.stdout.splitlines():
-                    if "category_id:" in line:
-                        best_category = line.split("category_id:")[-1].split()[0].strip()
+                    if "category:" in line:
+                        # 예: [1] user_id 'watch1'의 평균 시청비율이 높은 category: sci-fi (평균비율: 1.49)
+                        best_category_name = line.split("category:")[-1].split("(")[0].strip()
+                        # category_name을 category_id로 변환
+                        for cid, cname in category_map.items():
+                            if cname == best_category_name:
+                                best_category = cid
+                                print(f"[DEBUG] best_category_name: {best_category_name}, best_category_id: {best_category}")
+                                break
+                        else:
+                            print(f"[DEBUG] best_category_name '{best_category_name}'에 해당하는 category_id를 찾지 못함")
+                            return vids
                         break
                 else:
+                    print("[DEBUG] best_category를 찾지 못함")
                     return vids
                 # 추천 카테고리 영상 먼저, 그 외 영상 나중
                 best = [v for v in vids if v["category_id"] == best_category]
                 rest = [v for v in vids if v["category_id"] != best_category]
-                return best + rest
-            except Exception:
+                ordered = best + rest
+                print(f"[DEBUG] best 리스트 개수: {len(best)}, rest 리스트 개수: {len(rest)}")
+                print("[DEBUG] 정렬된 영상 리스트 (앞 10개):")
+                for v in ordered[:10]:
+                    print(f"video_id: {v['video_id']}, category_id: {v['category_id']}, title: {v['title']}")
+                return ordered
+            except Exception as e:
+                print("추천 정렬 중 예외:", e)
                 return vids
         return vids
 
@@ -137,7 +165,10 @@ class WatchEmulator(QWidget):
             QMessageBox.critical(self, "오류", "영상 리스트가 비어 있습니다.")
             return
         self.current_video = self.ordered_videos[self.video_index]
-        info = f"{self.current_video['title']} (video_id: {self.current_video['video_id']}, category_id: {self.current_video['category_id']})"
+        # category_id를 category명으로 변환
+        category_id = self.current_video['category_id']
+        category_name = category_map.get(category_id, category_id)
+        info = f"{self.current_video['title']} (video_id: {self.current_video['video_id']}, category: {category_name})"
         self.video_info.setText(info)
         # user_id 타이틀은 이미 설정되어 있으므로 따로 갱신 필요 없음
         file_path = self.current_video["file_path"]

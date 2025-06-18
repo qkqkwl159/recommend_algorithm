@@ -14,6 +14,15 @@ python3 dummy_gen.py
 
 # Excute
 
+## Conda
+
+```shell
+conda env create -f environment.yml
+
+conda activate movrcm
+```
+
+
 영상이 있는 디렉터리 경로로 설정하여 영상 카테고리 분류와 파일의 데이터 베이스를 저장 
 
 ```shell
