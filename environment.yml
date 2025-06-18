@@ -7,4 +7,4 @@ dependencies:
   - pip:
     - PyQt5 
     - Pillow
-    - python-opencv
+    - opencv-python
