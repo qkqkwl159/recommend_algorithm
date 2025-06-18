@@ -42,3 +42,7 @@ python3 watch_emul.py
 ```shell
 python3 recommend_by_watchlog.py
 ```
+
+## Duration
+
+![category_duration](/output/category_duration.png)
